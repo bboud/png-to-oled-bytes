@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned char** read_file(const char *file_name){
+unsigned char* convert(const char *file_name){
 	FILE *fp = fopen(file_name, "rb");
 	if(!fp){
+		printf("This is not a valid file..\n");
 		return NULL;
 	}
 
@@ -43,12 +44,7 @@ unsigned char** read_file(const char *file_name){
 
 	png_bytepp row_ptr = png_get_rows(png_ptr, info_ptr);
 
-	//This will reshape the data into column pointers instead of row pointers to lated be converted.
-	unsigned char **data = malloc(5*sizeof(unsigned char*));
-
-	for(int x = 0; x < 5; x++){
-		data[x] = malloc(8*sizeof(unsigned char));
-	}
+	unsigned char *data_t = malloc(5*sizeof(unsigned char));
 
 	//Height
 	for (int height = 0; height < 8; height++){
@@ -64,9 +60,16 @@ unsigned char** read_file(const char *file_name){
 
 			if (png_pix_ptr[3] != 0){
 				//Write one bit
-				data[x][height] = 0x01;
+				data_t[x] = data_t[x] | 0x01 << height;
 			}
 		}
+	}
+
+
+	//Verification
+	for(int i = 0; i < 5; i++){
+		printf("%#02x\n", data_t[i]);
+		printf("%#02x\n", (unsigned char)~data_t[i]);
 	}
 
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
@@ -75,15 +78,25 @@ unsigned char** read_file(const char *file_name){
 
 	fp=NULL;
 
-	return data;
+	return data_t;
 }
 
-int main(){
-	unsigned char** data = read_file("half.png");
+int main(int argc, char *argv[]){
 
-	for(int i = 0; i < 5; i++){
-		free(data[i]);
+	if(argc == 1){
+		printf("Usage: pngtby [width] [height] [file]\n");
+		return 0;
 	}
+
+	printf("%s\n", argv[1]);
+	unsigned char* data = convert(argv[1]);
+	if(!data){
+		return -1;
+	}
+
+	printf("Output of bytes: \n");
+	printf("%#02x, %#02x, %#02x, %#02x, %#02x,\n", data[0], data[1], data[2], data[3], data[4]);
+
 	free(data);
 }
 
