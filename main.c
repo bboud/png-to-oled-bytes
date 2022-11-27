@@ -14,6 +14,8 @@ void free_pixel_data(PixelData *p){
 	for(int s = 0; s < (*p).size; s++){
 		free(pages[s]);
 	}
+	
+	free(pages);
 
 	free(p);
 }
